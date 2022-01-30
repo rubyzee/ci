@@ -18,6 +18,6 @@ steps:
    commands:
       - git config --global user.name "Egii"
       - git config --global user.email "regidesoftian@gmail.com"
-      - git clone --depth=1 https://Egii:$GITHUB_TOKEN@github.com/rubyzee/android_kernel_xiaomi_mt6768 -b $BRANCH && cd kernel
+      - git clone --depth=1 https://Egii:$GITHUB_TOKEN@github.com/rubyzee/android_kernel_xiaomi_mt6768 -b $BRANCH kernel && cd kernel
       - curl $SCRIPT > run.sh
       - bash run.sh
