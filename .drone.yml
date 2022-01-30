@@ -1,0 +1,23 @@
+kind: pipeline
+name: Kernel Builder
+
+steps:
+ - name: conpile
+   image: fajar4561/saciku:latest
+   environment:
+     GITHUB_TOKEN:
+       from_secret: GITHUB_TOKEN
+     BRANCH:
+       from_secret: BRANCH
+     SCRIPT:
+       from_secret: SCRIPT
+     TG_CHAT_ID:
+       from_secret: TG_CHAT_ID
+     TG_TOKEN:
+       from_secret: TG_TOKEN
+   commands:
+      - git config --global user.name "Egii"
+      - git config --global user.email "regidesoftian@gmail.com"
+      - git clone --depth=1 https://Egii:$GITHUB_TOKEN@github.com/rubyzee/android_kernel_xiaomi_mt6768 -b $BRANCH && cd kernel
+      - curl $SCRIPT > run.sh
+      - bash run.sh
