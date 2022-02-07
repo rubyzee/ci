@@ -11,6 +11,10 @@ steps:
        from_secret: BRANCH
      SCRIPT:
        from_secret: SCRIPT
+     DEVICE_CODENAME:
+       from_secret: DEVICE_CODENAME
+     DEVICE_DEFCONFIG:
+       from_secret: DEVICE_DEFCONFIG
      TG_CHAT_ID:
        from_secret: TG_CHAT_ID
      TG_TOKEN:
