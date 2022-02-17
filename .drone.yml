@@ -1,27 +1,23 @@
 kind: pipeline
-name: Kernel Builder
-
+name : LLVM Toolchain Compiler
+version: rev1.5_template
 steps:
- - name: conpile
-   image: fajar4561/saciku:latest
+ - name: LLVM-tc Compilation
+   image: xyzuan/xdocker:latest
    environment:
-     GITHUB_TOKEN:
-       from_secret: GITHUB_TOKEN
-     BRANCH:
-       from_secret: BRANCH
-     SCRIPT:
-       from_secret: SCRIPT
-     DEVICE_CODENAME:
-       from_secret: DEVICE_CODENAME
-     DEVICE_DEFCONFIG:
-       from_secret: DEVICE_DEFCONFIG
-     TG_CHAT_ID:
-       from_secret: TG_CHAT_ID
+     LLVM_NAME:
+       from_secret: LLVM_NAME
      TG_TOKEN:
        from_secret: TG_TOKEN
+     TG_CHAT_ID:
+       from_secret: TG_CHAT_ID
+     GH_USERNAME:
+       from_secret: GH_USERNAME
+     GH_EMAIL:
+       from_secret: GH_EMAIL
+     GH_TOKEN:
+       from_secret: GH_TOKEN
+     GH_PUSH_REPO_URL:
+       from_secret: GH_PUSH_REPO_URL
    commands:
-      - git config --global user.name "Egii"
-      - git config --global user.email "regidesoftian@gmail.com"
-      - git clone --depth=1 https://Egii:$GITHUB_TOKEN@github.com/rubyzee/android_kernel_xiaomi_mt6768 -b $BRANCH kernel && cd kernel
-      - curl $SCRIPT > run.sh
-      - bash run.sh
+     - bash llvm-tc_build.sh
