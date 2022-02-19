@@ -1,16 +1,12 @@
 kind: pipeline
-name : LLVM Toolchain Compiler
+name : AOSP Clang Mirror
 version: rev1.5_template
 steps:
  - name: LLVM-tc Compilation
    image: xyzuan/xdocker:latest
    environment:
-     LLVM_NAME:
-       from_secret: LLVM_NAME
-     TG_TOKEN:
-       from_secret: TG_TOKEN
-     TG_CHAT_ID:
-       from_secret: TG_CHAT_ID
+     CLANG_VERSION:
+       from_secret: CLANG_VERSION
      GH_USERNAME:
        from_secret: GH_USERNAME
      GH_EMAIL:
@@ -20,4 +16,4 @@ steps:
      GH_PUSH_REPO_URL:
        from_secret: GH_PUSH_REPO_URL
    commands:
-     - bash llvm-tc_build.sh
+     - bash mirror.sh
