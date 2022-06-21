@@ -38,7 +38,7 @@ AK3_BRANCH=master
 export KBUILD_BUILD_USER=Leafaa
 export KBUILD_BUILD_HOST=XZI-TEAM
 CLANG_VER="$("$CLANG_ROOTDIR"/bin/clang --version | head -n 1)"
-GCC_VER="$("$GCC64_DIR"/bin/aarch64-alice-linux-gnu-gcc --version | head -n 1)"
+GCC_VER="$("$GCC64_DIR"/bin/aarch64-linux-gnu-gcc --version | head -n 1)"
 LLD_VER="$("$CLANG_ROOTDIR"/bin/ld.lld --version | head -n 1)"
 IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
 DATE=$(TZ=Asia/Jakarta date +"%Y%m%d-%T")

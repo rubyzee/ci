@@ -11,7 +11,7 @@ steps:
       - git config --global user.name Egii
       - git config --global user.email regidesoftian@gmail.com
       - git clone --depth=1 https://github.com/filolia/android_kernel_xiaomi_mt6768 -b twelve kernel
-      - "cp build.sh kernel"
+      - "cp build.sh kernel && cd kernel"
       - "bash build.sh FullLTO"
     environment: 
       BOT_TOKEN:
@@ -38,7 +38,7 @@ steps:
       - git config --global user.name Egii
       - git config --global user.email regidesoftian@gmail.com
       - git clone --depth=1 https://github.com/filolia/android_kernel_xiaomi_mt6768 -b twelve-miui kernel
-      - "cp build.sh kernel"
+      - "cp build.sh kernel && cd kernel"
       - "bash build.sh ThinLTO"
     environment: 
       BOT_TOKEN:
