@@ -20,11 +20,14 @@ GCC32_DIR=$(pwd)/GCC32
 msg "|| Cloning Toolchain ||"
 mkdir $CLANG_ROOTDIR
 rm -rf $CLANG_ROOTDIR/*
-wget -q  $(curl https://raw.githubusercontent.com/ZyCromerZ/Clang/main/Clang-main-link.txt 2>/dev/null) -O "ZyC-Clang-main.tar.gz"
-tar -xf ZyC-Clang-main.tar.gz -C $CLANG_ROOTDIR
-rm -rf ZyC-Clang-main.tar.gz
-git clone --depth=1 https://github.com/ZyCromerZ/aarch64-zyc-linux-gnu -b 12 GCC64
-git clone --depth=1 https://github.com/ZyCromerZ/arm-zyc-linux-gnueabi -b 12 GCC32
+wget -q  https://github.com/ZyCromerZ/Clang/releases/download/15.0.0-20220307-release/Clang-15.0.0-20220307.tar.gz -O "Clang-15.0.0-20220307.tar.gz"
+tar -xf Clang-15.0.0-20220307.tar.gz -C $CLANG_ROOTDIR
+mkdir $GCC64_DIR
+mkdir $GCC32_DIR
+wget -q https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/tags/android-12.0.0_r27.tar.gz -O "gcc64.tar.gz"
+tar -xf gcc64.tar.gz -C $GCC64_DIR
+wget -q https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/tags/android-12.0.0_r27.tar.gz -O "gcc32.tar.gz"
+tar -xf gcc32.tar.gz -C $GCC32_DIR
 
 # Main Declaration
 MODEL=Redmi Note 9
@@ -120,9 +123,9 @@ if [[ "$*" =~ "ThinLTO" ]];then
     OBJDUMP=${CLANG_ROOTDIR}/bin/llvm-objdump \
     OBJSIZE=${CLANG_ROOTDIR}/bin/llvm-size \
     READELF=${CLANG_ROOTDIR}/bin/llvm-readelf \
+    CROSS_COMPILE=aarch64-linux-android- \
+    CROSS_COMPILE_ARM32=arm-linux-androideabi- \
     CLANG_TRIPLE=aarch64-linux-gnu- \
-    CROSS_COMPILE=aarch64-zyc-linux-gnu- \
-    CROSS_COMPILE_ARM32=arm-zyc-linux-gnueabi- \
     HOSTAR=${CLANG_ROOTDIR}/bin/llvm-ar \
     HOSTLD=${CLANG_ROOTDIR}/bin/ld.lld \
     HOSTCC=${CLANG_ROOTDIR}/bin/clang \
