@@ -1,0 +1,20 @@
+--- 
+clone: 
+  depth: 1
+kind: pipeline
+name: TWRP-Builder
+concurrency:
+  limit: 6
+steps: 
+  - 
+    commands: 
+      - "bash build.sh"
+    environment: 
+      TG_TOKEN:
+        from_secret: TG_TOKEN
+      TG_CHAT_ID: -1001724811252
+    image: fajar4561/saciku:latest
+    name: Build
+    trigger: 
+      branch: 
+        - unified-tes
