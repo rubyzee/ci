@@ -2,7 +2,7 @@
 clone: 
   depth: 1
 kind: pipeline
-name: Kernel-Builder
+name: Leafaa-AOSP
 concurrency:
   limit: 6
 steps: 
@@ -21,7 +21,7 @@ steps:
         from_secret: TG_CHAT_ID
       VARIANT: AOSP
     image: zycromerz/kerneldocker:v3
-    name: Filolia-AOSP
+    name: Build
     trigger: 
       branch: 
         - unified-tes
@@ -30,7 +30,7 @@ steps:
 clone: 
   depth: 1
 kind: pipeline
-name: Kernel-Builder
+name: Leafaa-MIUI
 concurrency:
   limit: 6
 steps: 
@@ -49,7 +49,7 @@ steps:
         from_secret: TG_CHAT_ID
       VARIANT: MIUI
     image: zycromerz/kerneldocker:v3
-    name: Filolia-MIUI
+    name: Build
     trigger: 
       branch: 
         - unified-tes
