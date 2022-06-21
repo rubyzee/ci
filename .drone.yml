@@ -7,14 +7,6 @@ concurrency:
   limit: 6
 steps: 
   - 
-    environment: 
-      BOT_TOKEN:
-        from_secret: BOT_TOKEN
-      TG_CHAT_ID:
-        from_secret: TG_CHAT_ID
-      VARIANT: AOSP
-    image: ubuntu:jammy-20211029
-    name: Leafaa-Build
     commands: 
       - cp -af sources.list /etc/apt/
       - cp -af 99own /etc/apt/apt.conf.d/
@@ -27,6 +19,17 @@ steps:
       - "git clone --depth=1 https://github.com/filolia/android_kernel_xiaomi_mt6768 -b twelve kernel"
       - "cp build.sh kernel"
       - "bash build.sh FullLTO"
+    environment: 
+      BOT_TOKEN:
+        from_secret: BOT_TOKEN
+      TG_CHAT_ID:
+        from_secret: TG_CHAT_ID
+      VARIANT: AOSP
+    image: ubuntu:jammy-20211029
+    name: Leafaa-Build
+    trigger: 
+      branch: 
+        - leafa
 
 --- 
 clone: 
@@ -37,14 +40,6 @@ concurrency:
   limit: 6
 steps: 
   - 
-    environment: 
-      BOT_TOKEN:
-        from_secret: BOT_TOKEN
-      TG_CHAT_ID:
-        from_secret: TG_CHAT_ID
-      VARIANT: MIUI
-    image: ubuntu:jammy-20211029
-    name: Leafaa-Build
     commands: 
       - cp -af sources.list /etc/apt/
       - cp -af 99own /etc/apt/apt.conf.d/
@@ -57,3 +52,14 @@ steps:
       - "git clone --depth=1 https://github.com/filolia/android_kernel_xiaomi_mt6768 -b twelve-miui kernel"
       - "cp build.sh kernel"
       - "bash build.sh ThinLTO"
+    environment: 
+      BOT_TOKEN:
+        from_secret: BOT_TOKEN
+      TG_CHAT_ID:
+        from_secret: TG_CHAT_ID
+      VARIANT: MIUI
+    image: ubuntu:jammy-20211029
+    name: Leafaa-Build
+    trigger: 
+      branch: 
+        - leafa
