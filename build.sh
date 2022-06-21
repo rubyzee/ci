@@ -35,7 +35,7 @@ DEVICE_CODENAME=merlin
 DEVICE_DEFCONFIG=merlin_defconfig
 KERNEL_NAME=$(cat "arch/arm64/configs/$DEVICE_DEFCONFIG" | grep "CONFIG_LOCALVERSION=" | sed 's/CONFIG_LOCALVERSION="-*//g' | sed 's/"*//g' )
 AK3_BRANCH=master
-export KBUILD_BUILD_USER=Leafaa
+export KBUILD_BUILD_USER=Leafaaa
 export KBUILD_BUILD_HOST=XZI-TEAM
 CLANG_VER="$("$CLANG_ROOTDIR"/bin/clang --version | head -n 1)"
 # GCC_VER="$("$GCC64_DIR"/bin/aarch64-linux-gnu-gcc --version | head -n 1)"
@@ -49,6 +49,11 @@ DTBO=$(pwd)/out/arch/arm64/boot/dtbo.img
 DISTRO=$(source /etc/os-release && echo "${NAME}")
 export KBUILD_COMPILER_STRING="$CLANG_VER with $LLD_VER"
 PATH="${PATH}:${CLANG_ROOTDIR}/bin:${GCC64_DIR}/bin:${GCC32_DIR}/bin"
+
+if [[ "$*" =~ "FullLTO" ]];then
+sed -i "s/CONFIG_THINLTO=y/CONFIG_THINLTO=n/" arch/arm64/configs/$DEVICE_DEFCONFIG
+git add arch/arm64/configs/$DEVICE_DEFCONFIG && git commit -sm 'defconfig: Disable THINLTO'
+fi
 
 #Check Kernel Version
 KERVER=$(make kernelversion)
@@ -148,8 +153,8 @@ make -j$(nproc) ARCH=arm64 O=out \
 
   git clone --depth=1 https://github.com/rubyzee/AnyKernel3 -b ${AK3_BRANCH} AnyKernel
     	cp $IMAGE AnyKernel
-        cp $DTBO AnyKernel
-        mv $DTB AnyKernel/dtb
+      cp $DTBO AnyKernel
+      mv $DTB AnyKernel/dtb
 }
 
 # Push kernel to channel
