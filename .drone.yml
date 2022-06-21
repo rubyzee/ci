@@ -1,0 +1,55 @@
+--- 
+clone: 
+  depth: 1
+kind: pipeline
+name: Kernel-Builder
+concurrency:
+  limit: 6
+steps: 
+  - 
+    commands: 
+      - "git config --global user.name Egii"
+      - "git config --global user.email regidesoftian@gmail.com"
+      - "git clone --depth=1 https://github.com/filolia/android_kernel_xiaomi_mt6768 -b twelve kernel"
+      - "cp build.sh kernel"
+      - "cd kernel"
+      - "bash build.sh FullLTO"
+    environment: 
+      BOT_TOKEN:
+        from_secret: BOT_TOKEN
+      TG_CHAT_ID:
+        from_secret: TG_CHAT_ID
+      VARIANT: AOSP
+    image: zycromerz/kerneldocker:v3
+    name: Filolia-AOSP
+    trigger: 
+      branch: 
+        - unified-tes
+
+--- 
+clone: 
+  depth: 1
+kind: pipeline
+name: Kernel-Builder
+concurrency:
+  limit: 6
+steps: 
+  - 
+    commands: 
+      - "git config --global user.name Egii"
+      - "git config --global user.email regidesoftian@gmail.com"
+      - "git clone --depth=1 https://github.com/filolia/android_kernel_xiaomi_mt6768 -b twelve-miui kernel"
+      - "cp build.sh kernel"
+      - "cd kernel"
+      - "bash build.sh ThinLTO"
+    environment: 
+      BOT_TOKEN:
+        from_secret: BOT_TOKEN
+      TG_CHAT_ID:
+        from_secret: TG_CHAT_ID
+      VARIANT: MIUI
+    image: zycromerz/kerneldocker:v3
+    name: Filolia-MIUI
+    trigger: 
+      branch: 
+        - unified-tes
