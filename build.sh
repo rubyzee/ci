@@ -38,7 +38,7 @@ AK3_BRANCH=master
 export KBUILD_BUILD_USER=Leafaa
 export KBUILD_BUILD_HOST=XZI-TEAM
 CLANG_VER="$("$CLANG_ROOTDIR"/bin/clang --version | head -n 1)"
-GCC_VER="$("$GCC64_DIR"/bin/aarch64-linux-gnu-gcc --version | head -n 1)"
+# GCC_VER="$("$GCC64_DIR"/bin/aarch64-linux-gnu-gcc --version | head -n 1)"
 LLD_VER="$("$CLANG_ROOTDIR"/bin/ld.lld --version | head -n 1)"
 IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
 DATE=$(TZ=Asia/Jakarta date +"%Y%m%d-%T")
@@ -47,7 +47,7 @@ START=$(date +"%s")
 DTB=$(pwd)/out/arch/arm64/boot/dts/mediatek/mt6768.dtb
 DTBO=$(pwd)/out/arch/arm64/boot/dtbo.img
 DISTRO=$(source /etc/os-release && echo "${NAME}")
-export KBUILD_COMPILER_STRING="$CLANG_VER with $GCC_VER"
+export KBUILD_COMPILER_STRING="$CLANG_VER with $LLD_VER"
 PATH="${PATH}:${CLANG_ROOTDIR}/bin:${GCC64_DIR}/bin:${GCC32_DIR}/bin"
 
 #Check Kernel Version
@@ -156,7 +156,7 @@ make -j$(nproc) ARCH=arm64 O=out \
 function push() {
     msg "|| Started Uploading ||"
     cd AnyKernel
-    ZIP_NAME=[$VARIANT][$DATE2][$KERVER][$COMPILER][$VARIANT]$KERNEL_NAME[$DEVICE_CODENAME][R-OSS]-$HEADCOMMITID.zip
+    ZIP_NAME=[$VARIANT][$DATE2][$KERVER]$KERNEL_NAME[$DEVICE_CODENAME][R-OSS]-$HEADCOMMITID.zip
     ZIP=$(echo *.zip)
     MD5CHECK=$(md5sum "${ZIP}" | cut -d' ' -f1)
     SHA1CHECK=$(sha1sum "${ZIP}" | cut -d' ' -f1)
@@ -182,7 +182,7 @@ function finerr() {
 function zipping() {
     msg "|| Started Zipping ||"
     cd AnyKernel || exit 1
-    zip -r9 [$VARIANT][$DATE2][$KERVER][$COMPILER][$VARIANT]$KERNEL_NAME[$DEVICE_CODENAME][R-OSS]-$HEADCOMMITID.zip *
+    zip -r9 [$VARIANT][$DATE2][$KERVER]$KERNEL_NAME[$DEVICE_CODENAME][R-OSS]-$HEADCOMMITID.zip *
     cd ..
 }
 compile
