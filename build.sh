@@ -152,8 +152,10 @@ make -j$(nproc) ARCH=arm64 O=out \
    fi
 
   git clone --depth=1 https://github.com/rubyzee/AnyKernel3 -b ${AK3_BRANCH} AnyKernel
-    	cp $IMAGE AnyKernel
+      cp $IMAGE AnyKernel
+      if [[ $VARIANT = "MIUI" ]];then
       cp $DTBO AnyKernel
+      fi
       mv $DTB AnyKernel/dtb
 }
 
