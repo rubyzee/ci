@@ -37,7 +37,7 @@ steps:
     commands: 
       - git config --global user.name Egii
       - git config --global user.email regidesoftian@gmail.com
-      - git clone --depth=1 https://github.com/KuroSeinenbutV2/Quantum-Kyaru-Sweet kernel
+      - git clone --depth=1 https://github.com/KuroSeinenbutV2/Quantum-Kyaru-Sweet -b Miui  kernel
       - "cp build.sh kernel && cd kernel"
       - "bash build.sh ThinLTO"
     environment: 
