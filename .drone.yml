@@ -14,8 +14,8 @@ steps:
       - "cp build.sh kernel && cd kernel"
       - "bash build.sh FullLTO"
     environment: 
-      BOT_TOKEN:
-        from_secret: BOT_TOKEN
+      TG_TOKEN:
+        from_secret: TG_TOKEN
       TG_CHAT_ID:
         from_secret: TG_CHAT_ID
       VARIANT: AOSP
@@ -41,8 +41,8 @@ steps:
       - "cp build.sh kernel && cd kernel"
       - "bash build.sh ThinLTO"
     environment: 
-      BOT_TOKEN:
-        from_secret: BOT_TOKEN
+      TG_TOKEN:
+        from_secret: TG_TOKEN
       TG_CHAT_ID:
         from_secret: TG_CHAT_ID
       VARIANT: MIUI
