@@ -2,7 +2,7 @@
 clone: 
   depth: 1
 kind: pipeline
-name: Leafaa-AOSP
+name: Kyaru-AOSP
 concurrency:
   limit: 6
 steps: 
@@ -10,7 +10,7 @@ steps:
     commands: 
       - git config --global user.name Egii
       - git config --global user.email regidesoftian@gmail.com
-      - git clone --depth=1 https://github.com/rubyzee/android_kernel_xiaomi_mt6768 -b twelve kernel
+      - git clone --depth=1 https://github.com/KuroSeinenbutV2/Quantum-Kyaru-Sweet kernel
       - "cp build.sh kernel && cd kernel"
       - "bash build.sh FullLTO"
     environment: 
@@ -20,16 +20,16 @@ steps:
         from_secret: TG_CHAT_ID
       VARIANT: AOSP
     image: fajar4561/saciku:latest
-    name: Leafaa-Build
+    name: Kyaru-Build
     trigger: 
       branch: 
-        - leafa
+        - sweet
 
 --- 
 clone: 
   depth: 1
 kind: pipeline
-name: Leafaa-MIUI
+name: Kyaru-MIUI
 concurrency:
   limit: 6
 steps: 
@@ -37,7 +37,7 @@ steps:
     commands: 
       - git config --global user.name Egii
       - git config --global user.email regidesoftian@gmail.com
-      - git clone --depth=1 https://github.com/rubyzee/android_kernel_xiaomi_mt6768 -b twelve kernel
+      - git clone --depth=1 https://github.com/KuroSeinenbutV2/Quantum-Kyaru-Sweet kernel
       - "cp build.sh kernel && cd kernel"
       - "bash build.sh ThinLTO"
     environment: 
@@ -47,7 +47,7 @@ steps:
         from_secret: TG_CHAT_ID
       VARIANT: MIUI
     image: fajar4561/saciku:latest
-    name: Leafaa-Build
+    name: Kyaru-Build
     trigger: 
       branch: 
-        - leafa
+        - sweet

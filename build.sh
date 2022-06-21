@@ -30,12 +30,11 @@ wget -q https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/ar
 tar -xf gcc32.tar.gz -C $GCC32_DIR
 
 # Main Declaration
-MODEL=Redmi Note 9
-DEVICE_CODENAME=merlin
-DEVICE_DEFCONFIG=merlin_defconfig
+MODEL=Redmi Note 10 Pro
+DEVICE_CODENAME=sweet
+DEVICE_DEFCONFIG=sweet_defconfig
 KERNEL_NAME=$(cat "arch/arm64/configs/$DEVICE_DEFCONFIG" | grep "CONFIG_LOCALVERSION=" | sed 's/CONFIG_LOCALVERSION="-*//g' | sed 's/"*//g' )
-AK3_BRANCH=master
-export KBUILD_BUILD_USER=Leafaaa
+export KBUILD_BUILD_USER=KuroSeinen
 export KBUILD_BUILD_HOST=XZI-TEAM
 CLANG_VER="$("$CLANG_ROOTDIR"/bin/clang --version | head -n 1)"
 # GCC_VER="$("$GCC64_DIR"/bin/aarch64-linux-gnu-gcc --version | head -n 1)"
@@ -44,7 +43,6 @@ IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
 DATE=$(TZ=Asia/Jakarta date +"%Y%m%d-%T")
 DATE2=$(date +"%m%d")
 START=$(date +"%s")
-DTB=$(pwd)/out/arch/arm64/boot/dts/mediatek/mt6768.dtb
 DTBO=$(pwd)/out/arch/arm64/boot/dtbo.img
 DISTRO=$(source /etc/os-release && echo "${NAME}")
 export KBUILD_COMPILER_STRING="$CLANG_VER with $LLD_VER"
@@ -151,12 +149,9 @@ make -j$(nproc) ARCH=arm64 O=out \
 	exit 1
    fi
 
-  git clone --depth=1 https://github.com/rubyzee/AnyKernel3 -b ${AK3_BRANCH} AnyKernel
+  git clone --depth=1 https://github.com/KuroSeinenbutV2/AnyKernel3 AnyKernel
       cp $IMAGE AnyKernel
-      if [[ $VARIANT = "MIUI" ]];then
       cp $DTBO AnyKernel
-      fi
-      mv $DTB AnyKernel/dtb
 }
 
 # Push kernel to channel
