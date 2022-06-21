@@ -12,7 +12,7 @@ steps:
       - git config --global user.email regidesoftian@gmail.com
       - git clone --depth=1 https://github.com/KuroSeinenbutV2/Quantum-Kyaru-Sweet kernel
       - "cp build.sh kernel && cd kernel"
-      - "bash build.sh FullLTO"
+      - "bash build.sh"
     environment: 
       TG_TOKEN:
         from_secret: TG_TOKEN
@@ -39,7 +39,7 @@ steps:
       - git config --global user.email regidesoftian@gmail.com
       - git clone --depth=1 https://github.com/KuroSeinenbutV2/Quantum-Kyaru-Sweet -b Miui  kernel
       - "cp build.sh kernel && cd kernel"
-      - "bash build.sh ThinLTO"
+      - "bash build.sh"
     environment: 
       TG_TOKEN:
         from_secret: TG_TOKEN

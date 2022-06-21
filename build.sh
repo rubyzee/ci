@@ -1,173 +1,98 @@
 #!/usr/bin/env bash
 #
-# Copyright (C) 2021 a xyzprjkt property
-# Copyright (C) 2021 a Panchajanya1999 <rsk52959@gmail.com>
-# Copyright (C) 2022 a Egii <regidesoftian@gmail.com>
+# Copyright (C) 2021 a kucingabu property
 #
 
-msg() {
-	echo
-	echo -e "\e[1;32m$*\e[0m"
-	echo
-}
+# Main
+MainPath="$(pwd)"
+MainClangPath="${MainPath}/clang"
+MainClangZipPath="${MainPath}/clang-zip"
+ClangPath="${MainClangZipPath}"
+GCCaPath="${MainPath}/GCC64"
+GCCbPath="${MainPath}/GCC32"
+MainZipGCCaPath="${MainPath}/GCC64-zip"
+MainZipGCCbPath="${MainPath}/GCC32-zip"
 
-# Main Dir Info
-KERNEL_ROOTDIR=$(pwd)
-CLANG_ROOTDIR=$(pwd)/clang-llvm
-GCC64_DIR=$(pwd)/GCC64
-GCC32_DIR=$(pwd)/GCC32
-
-msg "|| Cloning Toolchain ||"
-mkdir $CLANG_ROOTDIR
-rm -rf $CLANG_ROOTDIR/*
+ClangPath=${MainClangZipPath}
+[[ "$(pwd)" != "${MainPath}" ]] && cd "${MainPath}"
+mkdir $ClangPath
+rm -rf $ClangPath/*
 wget -q  https://github.com/ZyCromerZ/Clang/releases/download/15.0.0-20220307-release/Clang-15.0.0-20220307.tar.gz -O "Clang-15.0.0-20220307.tar.gz"
-tar -xf Clang-15.0.0-20220307.tar.gz -C $CLANG_ROOTDIR
-mkdir $GCC64_DIR
-mkdir $GCC32_DIR
-wget -q https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/tags/android-12.0.0_r27.tar.gz -O "gcc64.tar.gz"
-tar -xf gcc64.tar.gz -C $GCC64_DIR
-wget -q https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/tags/android-12.0.0_r27.tar.gz -O "gcc32.tar.gz"
-tar -xf gcc32.tar.gz -C $GCC32_DIR
+tar -xf Clang-15.0.0-20220307.tar.gz -C $ClangPath
 
-# Main Declaration
-MODEL=Redmi Note 10 Pro
+mkdir $GCCaPath
+mkdir $GCCbPath
+wget -q https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/tags/android-12.0.0_r27.tar.gz -O "gcc64.tar.gz"
+tar -xf gcc64.tar.gz -C $GCCaPath
+wget -q https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/tags/android-12.0.0_r27.tar.gz -O "gcc32.tar.gz"
+tar -xf gcc32.tar.gz -C $GCCbPath
+
+#Main2
+export TZ="Asia/Jakarta"
+KERNEL_ROOTDIR=$(pwd) # IMPORTANT ! Fill with your kernel source root directory.
 DEVICE_CODENAME=sweet
 DEVICE_DEFCONFIG=sweet_defconfig
-KERNEL_NAME=$(cat "arch/arm64/configs/$DEVICE_DEFCONFIG" | grep "CONFIG_LOCALVERSION=" | sed 's/CONFIG_LOCALVERSION="-*//g' | sed 's/"*//g' )
+export KERNEL_NAME=$(cat "arch/arm64/configs/$DEVICE_DEFCONFIG" | grep "CONFIG_LOCALVERSION=" | sed 's/CONFIG_LOCALVERSION="-*//g' | sed 's/"*//g' )
 export KBUILD_BUILD_USER=KuroSeinen
 export KBUILD_BUILD_HOST=XZI-TEAM
-CLANG_VER="$("$CLANG_ROOTDIR"/bin/clang --version | head -n 1)"
-# GCC_VER="$("$GCC64_DIR"/bin/aarch64-linux-gnu-gcc --version | head -n 1)"
-LLD_VER="$("$CLANG_ROOTDIR"/bin/ld.lld --version | head -n 1)"
-IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
-DATE=$(TZ=Asia/Jakarta date +"%Y%m%d-%T")
+IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz
+CLANG_VER="$("$ClangPath"/bin/clang --version | head -n 1 | perl -pe 's/\(http.*?\)//gs' | sed -e 's/  */ /g' -e 's/[[:space:]]*$//')"
+LLD_VER="$("$ClangPath"/bin/ld.lld --version | head -n 1)"
+export KBUILD_COMPILER_STRING="$CLANG_VER with $LLD_VER"
+DATE=$(date +"%F-%S")
 DATE2=$(date +"%m%d")
 START=$(date +"%s")
+PATH=${ClangPath}/bin:${GCCaPath}/bin:${GCCbPath}/bin:${PATH}
 DTBO=$(pwd)/out/arch/arm64/boot/dtbo.img
-DISTRO=$(source /etc/os-release && echo "${NAME}")
-export KBUILD_COMPILER_STRING="$CLANG_VER with $LLD_VER"
-PATH="${PATH}:${CLANG_ROOTDIR}/bin:${GCC64_DIR}/bin:${GCC32_DIR}/bin"
-
-if [[ "$*" =~ "FullLTO" ]];then
-sed -i "s/CONFIG_THINLTO=y/CONFIG_THINLTO=n/" arch/arm64/configs/$DEVICE_DEFCONFIG
-git add arch/arm64/configs/$DEVICE_DEFCONFIG && git commit -sm 'defconfig: Disable THINLTO'
-fi
-
-#Check Kernel Version
-KERVER=$(make kernelversion)
-
-# Set a commit head
-COMMIT_HEAD=$(git log --oneline -1)
-HEADCOMMITID="$(git log --pretty=format:'%h' -n1)"
-HEADCOMMITMSG="$(git log --pretty=format:'%s' -n1)"
-CI_BRANCH=$(git rev-parse --abbrev-ref HEAD)
-TERM=xterm
-PROCS=$(nproc --all)
-export CI_BRANCH TERM
-
-## Check for CI
-if [ "$CI" ]
-then
-	if [ "$CIRCLECI" ]
-	then
-		export KBUILD_BUILD_VERSION=$CIRCLE_BUILD_NUM
-		export CI_BRANCH=$CIRCLE_BRANCH
-	fi
-	if [ "$DRONE" ]
-	then
-		export KBUILD_BUILD_VERSION=$DRONE_BUILD_NUMBER
-		export CI_BRANCH=$DRONE_BRANCH
-		export BASEDIR=$DRONE_REPO_NAME # overriding
-		export SERVER_URL="${DRONE_SYSTEM_PROTO}://${DRONE_SYSTEM_HOSTNAME}/${AUTHOR}/${BASEDIR}/${KBUILD_BUILD_VERSION}"
-	else
-		echo "Not presetting Build Version"
-	fi
-fi
-
-# Telegram
-export BOT_MSG_URL="https://api.telegram.org/bot$TG_TOKEN/sendMessage"
-
-tg_post_msg() {
-  curl -s -X POST "$BOT_MSG_URL" -d chat_id="$TG_CHAT_ID" \
-  -d "disable_web_page_preview=true" \
-  -d "parse_mode=html" \
-  -d text="$1"
-
-}
 
 # Post Main Information
-tg_post_msg "<b>New Kernel Under Compilation</b>%0ADate : <code>$(TZ=Asia/Jakarta date)</code>%0A<code> --- Detail Info About it --- </code>%0A<b>- Docker OS: </b><code>$DISTRO</code>%0A- Kernel Name : <code>${KERNEL_NAME}</code>%0A- Kernel Version : <code>${KERVER}</code>%0A- Builder Name : <code>${KBUILD_BUILD_USER}</code>%0A- Builder Host : <code>${KBUILD_BUILD_HOST}</code>%0A- Pipeline Host : <code>$DRONE_SYSTEM_HOSTNAME</code>%0A- Host Core Count : <code>$PROCS</code>%0A- Compiler Used : <code>${KBUILD_COMPILER_STRING}</code>%0A- Branch : <code>$CI_BRANCH</code>%0A- Top Commit : <code>$COMMIT_HEAD</code>%0A<a href='$SERVER_URL'>Link</a>"
-
-if [[ "$*" =~ "ThinLTO" ]];then
-  MAKE+=(
-    LD_LIBRARY_PATH="${CLANG_ROOTDIR}/lib64:${LD_LIBRARY_PATH}" \
-    CC=${CLANG_ROOTDIR}/bin/clang \
-    AR=${CLANG_ROOTDIR}/bin/llvm-ar \
-    NM=${CLANG_ROOTDIR}/bin/llvm-nm \
-    CXX=${CLANG_ROOTDIR}/bin/clang++ \
-    OBJCOPY=${CLANG_ROOTDIR}/bin/llvm-objcopy \
-    OBJDUMP=${CLANG_ROOTDIR}/bin/llvm-objdump \
-    STRIP=${CLANG_ROOTDIR}/bin/llvm-strip \
-    READELF=${CLANG_ROOTDIR}/bin/llvm-readelf \
-    LD=${CLANG_ROOTDIR}/bin/ld.lld \
-    CROSS_COMPILE=${CLANG_ROOTDIR}/bin/aarch64-linux-gnu- \
-    CROSS_COMPILE_ARM32=${CLANG_ROOTDIR}/bin/arm-linux-gnueabi-
- )
- elif [[ "$*" =~ "FullLTO" ]];then
-  MAKE+=(
-    LD_LIBRARY_PATH="${CLANG_ROOTDIR}/lib64:${LD_LIBRARY_PATH}" \
-    CC=${CLANG_ROOTDIR}/bin/clang \
-    NM=${CLANG_ROOTDIR}/bin/llvm-nm \
-    CXX=${CLANG_ROOTDIR}/bin/clang++ \
-    AR=${CLANG_ROOTDIR}/bin/llvm-ar \
-    LD=${CLANG_ROOTDIR}/bin/ld.lld \
-    STRIP=${CLANG_ROOTDIR}/bin/llvm-strip \
-    OBJCOPY=${CLANG_ROOTDIR}/bin/llvm-objcopy \
-    OBJDUMP=${CLANG_ROOTDIR}/bin/llvm-objdump \
-    OBJSIZE=${CLANG_ROOTDIR}/bin/llvm-size \
-    READELF=${CLANG_ROOTDIR}/bin/llvm-readelf \
-    CROSS_COMPILE=aarch64-linux-android- \
-    CROSS_COMPILE_ARM32=arm-linux-androideabi- \
-    CLANG_TRIPLE=aarch64-linux-gnu- \
-    HOSTAR=${CLANG_ROOTDIR}/bin/llvm-ar \
-    HOSTLD=${CLANG_ROOTDIR}/bin/ld.lld \
-    HOSTCC=${CLANG_ROOTDIR}/bin/clang \
-    HOSTCXX=${CLANG_ROOTDIR}/bin/clang++
-)
-fi
+tg_post_msg "<b>KernelCompiler</b>%0AKernel Name : <code>${KERNEL_NAME}</code>%0AKernel Version : <code>${KERVER}</code>%0ABuild Date : <code>${DATE}</code>%0ABuilder Name : <code>${KBUILD_BUILD_USER}</code>%0ABuilder Host : <code>${KBUILD_BUILD_HOST}</code>%0ADevice Defconfig: <code>${DEVICE_DEFCONFIG}</code>%0AClang Version : <code>${KBUILD_COMPILER_STRING}</code>%0AClang Rootdir : <code>${ClangPath}</code>%0AKernel Rootdir : <code>${KERNEL_ROOTDIR}</code>"
 
 # Compile
 compile(){
-msg "|| Started Compilation ||"
+tg_post_msg "<b>KernelCompiler:</b><code>Compilation has started</code>"
 cd ${KERNEL_ROOTDIR}
-make -j$(nproc) O=out ARCH=arm64 ${DEVICE_DEFCONFIG}
+export HASH_HEAD=$(git rev-parse --short HEAD)
+export COMMIT_HEAD=$(git log --oneline -1)
+make -j$(nproc) O=out ARCH=arm64 $DEVICE_DEFCONFIG
 make -j$(nproc) ARCH=arm64 O=out \
-         "${MAKE[@]}" 2>&1 | tee error.log
+    LD_LIBRARY_PATH="${ClangPath}/lib64:${LD_LIBRARY_PATH}" \
+    CC=${ClangPath}/bin/clang \
+    NM=${ClangPath}/bin/llvm-nm \
+    CXX=${ClangPath}/bin/clang++ \
+    AR=${ClangPath}/bin/llvm-ar \
+    LD=${ClangPath}/bin/ld.lld \
+    STRIP=${ClangPath}/bin/llvm-strip \
+    OBJCOPY=${ClangPath}/bin/llvm-objcopy \
+    OBJDUMP=${ClangPath}/bin/llvm-objdump \
+    OBJSIZE=${ClangPath}/bin/llvm-size \
+    READELF=${ClangPath}/bin/llvm-readelf \
+    CROSS_COMPILE=aarch64-linux-android- \
+    CROSS_COMPILE_ARM32=arm-linux-androideabi- \
+    CLANG_TRIPLE=aarch64-linux-gnu- \
+    HOSTAR=${ClangPath}/bin/llvm-ar \
+    HOSTLD=${ClangPath}/bin/ld.lld \
+    HOSTCC=${ClangPath}/bin/clang \
+    HOSTCXX=${ClangPath}/bin/clang++ \
+    2>&1 | tee error.log
 
    if ! [ -a "$IMAGE" ]; then
 	finerr
 	exit 1
    fi
-
   git clone --depth=1 https://github.com/KuroSeinenbutV2/AnyKernel3 AnyKernel
-      cp $IMAGE AnyKernel
-      cp $DTBO AnyKernel
+	    cp $IMAGE AnyKernel
+        cp $DTBO AnyKernel
 }
-
 # Push kernel to channel
 function push() {
-    msg "|| Started Uploading ||"
     cd AnyKernel
-    ZIP_NAME=[$VARIANT][$DATE2][$KERVER]$KERNEL_NAME[$DEVICE_CODENAME][R-OSS]-$HEADCOMMITID.zip
     ZIP=$(echo *.zip)
-    MD5CHECK=$(md5sum "${ZIP}" | cut -d' ' -f1)
-    SHA1CHECK=$(sha1sum "${ZIP}" | cut -d' ' -f1)
-    tg_post_msg "✅ <b>Build Success</b>%0A- <code>$((DIFF / 60)) minute(s) $((DIFF % 60)) second(s) </code>%0A<b>MD5 Checksum</b>%0A- <code>${MD5CHECK}</code>%0A<b>SHA1 Checksum</b>%0A- <code>${SHA1CHECK}</code>%0A<b>Under Commit Id Message</b>%0A- <code>${COMMIT_HEAD}</code>%0A<b>Compilers</b>%0A- <code>$KBUILD_COMPILER_STRING</code>%0A<b>Zip Name</b>%0A- <code>${ZIP_NAME}</code>%0A%0A-- Happy Using --"
     curl -F document=@$ZIP "https://api.telegram.org/bot$TG_TOKEN/sendDocument" \
         -F chat_id="$TG_CHAT_ID" \
         -F "disable_web_page_preview=true" \
         -F "parse_mode=html" \
-        -F caption="✅ Compile took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)"
+        -F caption="✅Compile took $(($DIFF / 60)) minute(s) and $(($DIFF % 60)) second(s). | For <b>$DEVICE_CODENAME</b> | <b>${KBUILD_COMPILER_STRING}</b>"
 }
 # Fin Error
 function finerr() {
@@ -182,9 +107,8 @@ function finerr() {
 
 # Zipping
 function zipping() {
-    msg "|| Started Zipping ||"
     cd AnyKernel || exit 1
-    zip -r9 [$VARIANT][$DATE2][$KERVER]$KERNEL_NAME[$DEVICE_CODENAME][R-OSS]-$HEADCOMMITID.zip *
+    zip -r9 [$VARIANT][$DATE2]$KERNEL_NAME[$DEVICE_CODENAME]${DATE}.zip *
     cd ..
 }
 compile
