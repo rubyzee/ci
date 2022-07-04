@@ -2,7 +2,7 @@
 #
 # Copyright (C) 2021 a xyzprjkt property
 # Copyright (C) 2021 a Panchajanya1999 <rsk52959@gmail.com>
-# Copyright (C) 2022 a Egii <regidesoftian@gmail.com>
+# Copyright (C) 2022 a Himemorii <himemori@mail.com>
 #
 
 msg() {
@@ -18,28 +18,19 @@ GCC64_DIR=$(pwd)/GCC64
 GCC32_DIR=$(pwd)/GCC32
 
 msg "|| Cloning Toolchain ||"
-mkdir $CLANG_ROOTDIR
-rm -rf $CLANG_ROOTDIR/*
-wget -q  https://github.com/ZyCromerZ/Clang/releases/download/15.0.0-20220307-release/Clang-15.0.0-20220307.tar.gz -O "Clang-15.0.0-20220307.tar.gz"
-tar -xf Clang-15.0.0-20220307.tar.gz -C $CLANG_ROOTDIR
-mkdir $GCC64_DIR
-mkdir $GCC32_DIR
-wget -q https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/aarch64/aarch64-linux-android-4.9/+archive/refs/tags/android-12.0.0_r27.tar.gz -O "gcc64.tar.gz"
-tar -xf gcc64.tar.gz -C $GCC64_DIR
-wget -q https://android.googlesource.com/platform/prebuilts/gcc/linux-x86/arm/arm-linux-androideabi-4.9/+archive/refs/tags/android-12.0.0_r27.tar.gz -O "gcc32.tar.gz"
-tar -xf gcc32.tar.gz -C $GCC32_DIR
+git clone --depth=1 https://github.com/cyberknight777/gcc-arm64 -b master $GCC64_DIR
+git clone --depth=1 https://github.com/cyberknight777/gcc-arm -b master $GCC32_DIR
 
 # Main Declaration
 MODEL=Redmi Note 9
 DEVICE_CODENAME=merlin
 DEVICE_DEFCONFIG=merlin_defconfig
+AK3_BRANCH=merlin
 KERNEL_NAME=$(cat "arch/arm64/configs/$DEVICE_DEFCONFIG" | grep "CONFIG_LOCALVERSION=" | sed 's/CONFIG_LOCALVERSION="-*//g' | sed 's/"*//g' )
-AK3_BRANCH=master
-export KBUILD_BUILD_USER=Leafaaa
+export KBUILD_BUILD_USER=Himemori
 export KBUILD_BUILD_HOST=XZI-TEAM
-CLANG_VER="$("$CLANG_ROOTDIR"/bin/clang --version | head -n 1)"
-# GCC_VER="$("$GCC64_DIR"/bin/aarch64-linux-gnu-gcc --version | head -n 1)"
-LLD_VER="$("$CLANG_ROOTDIR"/bin/ld.lld --version | head -n 1)"
+GCC_VER="$("$GCC64_DIR"/bin/aarch64-elf-gcc --version | head -n 1)"
+LLD_VER="$("$GCC64_DIR"/bin/aarch64-elf-ld.lld --version | head -n 1)"
 IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
 DATE=$(TZ=Asia/Jakarta date +"%Y%m%d-%T")
 DATE2=$(date +"%m%d")
@@ -47,13 +38,8 @@ START=$(date +"%s")
 DTB=$(pwd)/out/arch/arm64/boot/dts/mediatek/mt6768.dtb
 DTBO=$(pwd)/out/arch/arm64/boot/dtbo.img
 DISTRO=$(source /etc/os-release && echo "${NAME}")
-export KBUILD_COMPILER_STRING="$CLANG_VER with $LLD_VER"
-PATH="${PATH}:${CLANG_ROOTDIR}/bin:${GCC64_DIR}/bin:${GCC32_DIR}/bin"
-
-if [[ "$*" =~ "FullLTO" ]];then
-sed -i "s/CONFIG_THINLTO=y/CONFIG_THINLTO=n/" arch/arm64/configs/$DEVICE_DEFCONFIG
-git add arch/arm64/configs/$DEVICE_DEFCONFIG && git commit -sm 'defconfig: Disable THINLTO'
-fi
+export KBUILD_COMPILER_STRING="$GCC_VER with $LLD_VER"
+PATH="$GCC64_DIR/bin/:$GCC32_DIR/bin/:/usr/bin:$PATH"
 
 #Check Kernel Version
 KERVER=$(make kernelversion)
@@ -98,45 +84,24 @@ tg_post_msg() {
 }
 
 # Post Main Information
-tg_post_msg "<b>New Kernel Under Compilation</b>%0ADate : <code>$(TZ=Asia/Jakarta date)</code>%0A<code> --- Detail Info About it --- </code>%0A<b>- Docker OS: </b><code>$DISTRO</code>%0A- Kernel Name : <code>${KERNEL_NAME}</code>%0A- Kernel Version : <code>${KERVER}</code>%0A- Builder Name : <code>${KBUILD_BUILD_USER}</code>%0A- Builder Host : <code>${KBUILD_BUILD_HOST}</code>%0A- Pipeline Host : <code>$DRONE_SYSTEM_HOSTNAME</code>%0A- Host Core Count : <code>$PROCS</code>%0A- Compiler Used : <code>${KBUILD_COMPILER_STRING}</code>%0A- Branch : <code>$CI_BRANCH</code>%0A- Top Commit : <code>$COMMIT_HEAD</code>%0A<a href='$SERVER_URL'>Link</a>"
+tg_post_msg "<b>New Kernel Under Compilation</b>%0ADate : <code>$(TZ=Asia/Jakarta date)</code>%0A<code> --- Detail Info About it --- </code>%0A<b>- Docker OS: </b><code>$DISTRO</code>%0A- Kernel Name : <code>${KERNEL_NAME}</code>%0A- Kernel Version : <code>${KERVER}</code>%0A- Builder Name : <code>${KBUILD_BUILD_USER}</code>%0A- Builder Host : <code>${KBUILD_BUILD_HOST}</code>%0A- Host Core Count : <code>$PROCS</code>%0A- Compiler Used : <code>${KBUILD_COMPILER_STRING}</code>%0A- Branch : <code>$CI_BRANCH</code>%0A- Top Commit : <code>$COMMIT_HEAD</code>"
 
-if [[ "$*" =~ "ThinLTO" ]];then
   MAKE+=(
-    LD_LIBRARY_PATH="${CLANG_ROOTDIR}/lib64:${LD_LIBRARY_PATH}" \
-    CC=${CLANG_ROOTDIR}/bin/clang \
-    AR=${CLANG_ROOTDIR}/bin/llvm-ar \
-    NM=${CLANG_ROOTDIR}/bin/llvm-nm \
-    CXX=${CLANG_ROOTDIR}/bin/clang++ \
-    OBJCOPY=${CLANG_ROOTDIR}/bin/llvm-objcopy \
-    OBJDUMP=${CLANG_ROOTDIR}/bin/llvm-objdump \
-    STRIP=${CLANG_ROOTDIR}/bin/llvm-strip \
-    READELF=${CLANG_ROOTDIR}/bin/llvm-readelf \
-    LD=${CLANG_ROOTDIR}/bin/ld.lld \
-    CROSS_COMPILE=${CLANG_ROOTDIR}/bin/aarch64-linux-gnu- \
-    CROSS_COMPILE_ARM32=${CLANG_ROOTDIR}/bin/arm-linux-gnueabi-
- )
- elif [[ "$*" =~ "FullLTO" ]];then
-  MAKE+=(
-    LD_LIBRARY_PATH="${CLANG_ROOTDIR}/lib64:${LD_LIBRARY_PATH}" \
-    CC=${CLANG_ROOTDIR}/bin/clang \
-    NM=${CLANG_ROOTDIR}/bin/llvm-nm \
-    CXX=${CLANG_ROOTDIR}/bin/clang++ \
-    AR=${CLANG_ROOTDIR}/bin/llvm-ar \
-    LD=${CLANG_ROOTDIR}/bin/ld.lld \
-    STRIP=${CLANG_ROOTDIR}/bin/llvm-strip \
-    OBJCOPY=${CLANG_ROOTDIR}/bin/llvm-objcopy \
-    OBJDUMP=${CLANG_ROOTDIR}/bin/llvm-objdump \
-    OBJSIZE=${CLANG_ROOTDIR}/bin/llvm-size \
-    READELF=${CLANG_ROOTDIR}/bin/llvm-readelf \
-    CROSS_COMPILE=aarch64-linux-android- \
-    CROSS_COMPILE_ARM32=arm-linux-androideabi- \
-    CLANG_TRIPLE=aarch64-linux-gnu- \
-    HOSTAR=${CLANG_ROOTDIR}/bin/llvm-ar \
-    HOSTLD=${CLANG_ROOTDIR}/bin/ld.lld \
-    HOSTCC=${CLANG_ROOTDIR}/bin/clang \
-    HOSTCXX=${CLANG_ROOTDIR}/bin/clang++
+    CC=aarch64-elf-gcc
+    LD=aarch64-elf-ld.lld
+    CROSS_COMPILE=aarch64-elf-
+    CROSS_COMPILE_ARM32=arm-eabi-
+    AR=llvm-ar
+    NM=llvm-nm
+    OBJDUMP=llvm-objdump
+    OBJCOPY=llvm-objcopy
+    OBJSIZE=llvm-objsize
+    STRIP=llvm-strip
+    HOSTAR=llvm-ar
+    HOSTCC=gcc
+    HOSTCXX=aarch64-elf-g++
+    CONFIG_DEBUG_SECTION_MISMATCH=y
 )
-fi
 
 # Compile
 compile(){
@@ -151,19 +116,17 @@ make -j$(nproc) ARCH=arm64 O=out \
 	exit 1
    fi
 
-  git clone --depth=1 https://github.com/rubyzee/AnyKernel3 -b ${AK3_BRANCH} AnyKernel
-      cp $IMAGE AnyKernel
-      if [[ $VARIANT = "MIUI" ]];then
-      cp $DTBO AnyKernel
-      fi
-      mv $DTB AnyKernel/dtb
+  git clone --depth=1 https://github.com/Himemoria/AnyKernel3 -b ${AK3_BRANCH} AnyKernel
+    cp $IMAGE AnyKernel
+    cp $DTBO AnyKernel
+    mv $DTB AnyKernel/dtb
 }
 
 # Push kernel to channel
 function push() {
     msg "|| Started Uploading ||"
     cd AnyKernel
-    ZIP_NAME=[$VARIANT][$DATE2][$KERVER]$KERNEL_NAME[$DEVICE_CODENAME][R-OSS]-$HEADCOMMITID.zip
+    ZIP_NAME=[$DATE2][$KERVER]$KERNEL_NAME[$DEVICE_CODENAME][R-OSS]-$HEADCOMMITID.zip
     ZIP=$(echo *.zip)
     MD5CHECK=$(md5sum "${ZIP}" | cut -d' ' -f1)
     SHA1CHECK=$(sha1sum "${ZIP}" | cut -d' ' -f1)
@@ -189,7 +152,7 @@ function finerr() {
 function zipping() {
     msg "|| Started Zipping ||"
     cd AnyKernel || exit 1
-    zip -r9 [$VARIANT][$DATE2][$KERVER]$KERNEL_NAME[$DEVICE_CODENAME][R-OSS]-$HEADCOMMITID.zip *
+    zip -r9 [$DATE2][$KERVER]$KERNEL_NAME[$DEVICE_CODENAME][R-OSS]-$HEADCOMMITID.zip *
     cd ..
 }
 compile

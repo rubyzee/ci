@@ -2,52 +2,24 @@
 clone: 
   depth: 1
 kind: pipeline
-name: Leafaa-AOSP
+name: Roulette-GCC
 concurrency:
   limit: 6
 steps: 
   - 
-    commands: 
+    commands:
       - git config --global user.name Egii
       - git config --global user.email regidesoftian@gmail.com
-      - git clone --depth=1 https://github.com/rubyzee/android_kernel_xiaomi_mt6768 -b twelve kernel
+      - git clone --depth=1 https://github.com/Himemoria/android_kernel_xiaomi_mt6768 -b base-r-upstream kernel
       - "cp build.sh kernel && cd kernel"
-      - "bash build.sh FullLTO"
+      - "bash build.sh"
     environment: 
       TG_TOKEN:
         from_secret: TG_TOKEN
       TG_CHAT_ID:
         from_secret: TG_CHAT_ID
-      VARIANT: AOSP
-    image: fajar4561/saciku:latest
-    name: Leafaa-Build
+    image: panchajanya1999/archlinux:latest
+    name: Roulette-Build
     trigger: 
       branch: 
-        - leafa
-
---- 
-clone: 
-  depth: 1
-kind: pipeline
-name: Leafaa-MIUI
-concurrency:
-  limit: 6
-steps: 
-  - 
-    commands: 
-      - git config --global user.name Egii
-      - git config --global user.email regidesoftian@gmail.com
-      - git clone --depth=1 https://github.com/rubyzee/android_kernel_xiaomi_mt6768 -b twelve kernel
-      - "cp build.sh kernel && cd kernel"
-      - "bash build.sh ThinLTO"
-    environment: 
-      TG_TOKEN:
-        from_secret: TG_TOKEN
-      TG_CHAT_ID:
-        from_secret: TG_CHAT_ID
-      VARIANT: MIUI
-    image: fajar4561/saciku:latest
-    name: Leafaa-Build
-    trigger: 
-      branch: 
-        - leafa
+        - roulette
