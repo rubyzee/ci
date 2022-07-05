@@ -2,7 +2,7 @@
 clone: 
   depth: 1
 kind: pipeline
-name: Roulette-GCC
+name: Yukina-Selene
 concurrency:
   limit: 6
 steps: 
@@ -10,7 +10,7 @@ steps:
     commands:
       - git config --global user.name Egii
       - git config --global user.email regidesoftian@gmail.com
-      - git clone --depth=1 https://github.com/Himemoria/android_kernel_xiaomi_mt6768 -b base-r-upstream kernel
+      - git clone --depth=1 https://github.com/Himemoria/android_kernel_xiaomi_selene kernel
       - "cp build.sh kernel && cd kernel"
       - "bash build.sh"
     environment: 
@@ -18,8 +18,8 @@ steps:
         from_secret: TG_TOKEN
       TG_CHAT_ID:
         from_secret: TG_CHAT_ID
-    image: panchajanya1999/archlinux:latest
-    name: Roulette-Build
+    image: fajar4561/saciku:latest
+    name: Yukina-Build
     trigger: 
       branch: 
         - roulette

@@ -17,20 +17,22 @@ CLANG_ROOTDIR=$(pwd)/clang-llvm
 GCC64_DIR=$(pwd)/GCC64
 GCC32_DIR=$(pwd)/GCC32
 
-msg "|| Cloning Toolchain ||"
+msg "|| Started Compilation ||"
+git clone --depth=1 https://gitlab.com/dakkshesh07/neutron-clang $CLANG_ROOTDIR
 git clone --depth=1 https://github.com/cyberknight777/gcc-arm64 -b master $GCC64_DIR
 git clone --depth=1 https://github.com/cyberknight777/gcc-arm -b master $GCC32_DIR
 
 # Main Declaration
-MODEL=Redmi Note 9
-DEVICE_CODENAME=merlin
-DEVICE_DEFCONFIG=merlin_defconfig
-AK3_BRANCH=merlin
-KERNEL_NAME=$(cat "arch/arm64/configs/$DEVICE_DEFCONFIG" | grep "CONFIG_LOCALVERSION=" | sed 's/CONFIG_LOCALVERSION="-*//g' | sed 's/"*//g' )
+MODEL=Redmi 10
+DEVICE_CODENAME=selene
+DEVICE_DEFCONFIG=selene_defconfig
+AK3_BRANCH=selene
+KERNEL_NAME=Yukina-Stamine
 export KBUILD_BUILD_USER=Himemori
 export KBUILD_BUILD_HOST=XZI-TEAM
+CLANG_VER="$("$CLANG_ROOTDIR"/bin/clang --version | head -n 1)"
 GCC_VER="$("$GCC64_DIR"/bin/aarch64-elf-gcc --version | head -n 1)"
-LLD_VER="$("$GCC64_DIR"/bin/aarch64-elf-ld.lld --version | head -n 1)"
+LLD_VER="$("$CLANG_ROOTDIR"/bin/ld.lld --version | head -n 1)"
 IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
 DATE=$(TZ=Asia/Jakarta date +"%Y%m%d-%T")
 DATE2=$(date +"%m%d")
@@ -38,8 +40,13 @@ START=$(date +"%s")
 DTB=$(pwd)/out/arch/arm64/boot/dts/mediatek/mt6768.dtb
 DTBO=$(pwd)/out/arch/arm64/boot/dtbo.img
 DISTRO=$(source /etc/os-release && echo "${NAME}")
-export KBUILD_COMPILER_STRING="$GCC_VER with $LLD_VER"
-PATH="$GCC64_DIR/bin/:$GCC32_DIR/bin/:/usr/bin:$PATH"
+export KBUILD_COMPILER_STRING="$CLANG_VER with $GCC_VER"
+PATH="${PATH}:${CLANG_ROOTDIR}/bin:${GCC64_DIR}/bin:${GCC32_DIR}/bin"
+
+if [[ "$*" =~ "FullLTO" ]];then
+sed -i "s/CONFIG_THINLTO=y/CONFIG_THINLTO=n/" arch/arm64/configs/$DEVICE_DEFCONFIG
+git add arch/arm64/configs/$DEVICE_DEFCONFIG && git commit -sm 'defconfig: Disable THINLTO'
+fi
 
 #Check Kernel Version
 KERVER=$(make kernelversion)
@@ -84,33 +91,33 @@ tg_post_msg() {
 }
 
 # Post Main Information
-tg_post_msg "<b>New Kernel Under Compilation</b>%0ADate : <code>$(TZ=Asia/Jakarta date)</code>%0A<code> --- Detail Info About it --- </code>%0A<b>- Docker OS: </b><code>$DISTRO</code>%0A- Kernel Name : <code>${KERNEL_NAME}</code>%0A- Kernel Version : <code>${KERVER}</code>%0A- Builder Name : <code>${KBUILD_BUILD_USER}</code>%0A- Builder Host : <code>${KBUILD_BUILD_HOST}</code>%0A- Host Core Count : <code>$PROCS</code>%0A- Compiler Used : <code>${KBUILD_COMPILER_STRING}</code>%0A- Branch : <code>$CI_BRANCH</code>%0A- Top Commit : <code>$COMMIT_HEAD</code>"
+tg_post_msg "<b>New Kernel Under Compilation</b>%0ADate : <code>$(TZ=Asia/Jakarta date)</code>%0A<code> --- Detail Info About it --- </code>%0A<b>- Docker OS: </b><code>$DISTRO</code>%0A- Kernel Name : <code>${KERNEL_NAME}</code>%0A- Kernel Version : <code>${KERVER}</code>%0A- Builder Name : <code>${KBUILD_BUILD_USER}</code>%0A- Builder Host : <code>${KBUILD_BUILD_HOST}</code>%0A- Pipeline Host : <code>$DRONE_SYSTEM_HOSTNAME</code>%0A- Host Core Count : <code>$PROCS</code>%0A- Compiler Used : <code>${KBUILD_COMPILER_STRING}</code>%0A- Branch : <code>$CI_BRANCH</code>%0A- Top Commit : <code>$COMMIT_HEAD</code>%0A<a href='$SERVER_URL'>Link</a>"
 
   MAKE+=(
-    CC=aarch64-elf-gcc
-    LD=aarch64-elf-ld.lld
-    CROSS_COMPILE=aarch64-elf-
-    CROSS_COMPILE_ARM32=arm-eabi-
-    AR=llvm-ar
-    NM=llvm-nm
-    OBJDUMP=llvm-objdump
-    OBJCOPY=llvm-objcopy
-    OBJSIZE=llvm-objsize
-    STRIP=llvm-strip
-    HOSTAR=llvm-ar
-    HOSTCC=gcc
-    HOSTCXX=aarch64-elf-g++
-    CONFIG_DEBUG_SECTION_MISMATCH=y
+    LD_LIBRARY_PATH="${CLANG_ROOTDIR}/lib64:${LD_LIBRARY_PATH}" \
+    CC=${CLANG_ROOTDIR}/bin/clang \
+    NM=${CLANG_ROOTDIR}/bin/llvm-nm \
+    CXX=${CLANG_ROOTDIR}/bin/clang++ \
+    AR=${CLANG_ROOTDIR}/bin/llvm-ar \
+    LD=${CLANG_ROOTDIR}/bin/ld.lld \
+    STRIP=${CLANG_ROOTDIR}/bin/llvm-strip \
+    OBJCOPY=${CLANG_ROOTDIR}/bin/llvm-objcopy \
+    OBJDUMP=${CLANG_ROOTDIR}/bin/llvm-objdump \
+    OBJSIZE=${CLANG_ROOTDIR}/bin/llvm-size \
+    READELF=${CLANG_ROOTDIR}/bin/llvm-readelf \
+    CROSS_COMPILE_ARM32=arm-eabi- \
+    CROSS_COMPILE=aarch64-elf- \
+    CLANG_TRIPLE=aarch64-elf- \
+    HOSTAR=${CLANG_ROOTDIR}/bin/llvm-ar \
+    HOSTLD=${CLANG_ROOTDIR}/bin/ld.lld \
+    HOSTCC=${CLANG_ROOTDIR}/bin/clang \
+    HOSTCXX=${CLANG_ROOTDIR}/bin/clang++
 )
-
-# Regenerate Defconfig
-make "${MAKE[@]}" $DEVICE_DEFCONFIG
-cp -rf "${KERNEL_ROOTDIR}"/out/.config "${KERNEL_ROOTDIR}"/arch/arm64/configs/$DEVICE_DEFCONFIG
 
 # Compile
 compile(){
 msg "|| Started Compilation ||"
-cd ${KERNEL_ROOTDIR}
+# cd ${KERNEL_ROOTDIR}
 make -j$(nproc) O=out ARCH=arm64 ${DEVICE_DEFCONFIG}
 make -j$(nproc) ARCH=arm64 O=out \
          "${MAKE[@]}" 2>&1 | tee error.log
@@ -120,7 +127,7 @@ make -j$(nproc) ARCH=arm64 O=out \
 	exit 1
    fi
 
-  git clone --depth=1 https://github.com/Himemoria/AnyKernel3 -b ${AK3_BRANCH} AnyKernel
+  git clone --depth=1 https://github.com/himemorii/AnyKernel3 -b ${AK3_BRANCH} AnyKernel
     cp $IMAGE AnyKernel
     cp $DTBO AnyKernel
     mv $DTB AnyKernel/dtb
