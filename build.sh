@@ -103,6 +103,10 @@ tg_post_msg "<b>New Kernel Under Compilation</b>%0ADate : <code>$(TZ=Asia/Jakart
     CONFIG_DEBUG_SECTION_MISMATCH=y
 )
 
+# Regenerate Defconfig
+make "${MAKE[@]}" $DEVICE_DEFCONFIG
+cp -rf "${KERNEL_ROOTDIR}"/out/.config "${KERNEL_ROOTDIR}"/arch/arm64/configs/$DEVICE_DEFCONFIG
+
 # Compile
 compile(){
 msg "|| Started Compilation ||"
