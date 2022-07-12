@@ -101,6 +101,7 @@ tg_post_msg "<b>New Kernel Under Compilation</b>%0ADate : <code>$(TZ=Asia/Jakart
     HOSTCC=gcc
     HOSTCXX=aarch64-elf-g++
     CONFIG_DEBUG_SECTION_MISMATCH=y
+    CONFIG_SECTION_MISMATCH_WARN_ONLY=y
 )
 
 # Regenerate Defconfig
