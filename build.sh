@@ -93,7 +93,6 @@ tg_post_msg "<b>New Kernel Under Compilation</b>%0ADate : <code>$(TZ=Asia/Jakart
 		OBJDUMP=aarch64-elf-objdump
 		STRIP=aarch64-elf-strip
     CONFIG_DEBUG_SECTION_MISMATCH=y
-    CONFIG_SECTION_MISMATCH_WARN_ONLY=y
 )
 
 # Regenerate Defconfig
