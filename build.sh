@@ -87,19 +87,11 @@ tg_post_msg() {
 tg_post_msg "<b>New Kernel Under Compilation</b>%0ADate : <code>$(TZ=Asia/Jakarta date)</code>%0A<code> --- Detail Info About it --- </code>%0A<b>- Docker OS: </b><code>$DISTRO</code>%0A- Kernel Name : <code>${KERNEL_NAME}</code>%0A- Kernel Version : <code>${KERVER}</code>%0A- Builder Name : <code>${KBUILD_BUILD_USER}</code>%0A- Builder Host : <code>${KBUILD_BUILD_HOST}</code>%0A- Host Core Count : <code>$PROCS</code>%0A- Compiler Used : <code>${KBUILD_COMPILER_STRING}</code>%0A- Branch : <code>$CI_BRANCH</code>%0A- Top Commit : <code>$COMMIT_HEAD</code>"
 
   MAKE+=(
-    CC=aarch64-elf-gcc
-    LD=aarch64-elf-ld.lld
-    CROSS_COMPILE=aarch64-elf-
     CROSS_COMPILE_ARM32=arm-eabi-
-    AR=llvm-ar
-    NM=llvm-nm
-    OBJDUMP=llvm-objdump
-    OBJCOPY=llvm-objcopy
-    OBJSIZE=llvm-objsize
-    STRIP=llvm-strip
-    HOSTAR=llvm-ar
-    HOSTCC=gcc
-    HOSTCXX=aarch64-elf-g++
+		CROSS_COMPILE=aarch64-elf-
+		AR=aarch64-elf-ar
+		OBJDUMP=aarch64-elf-objdump
+		STRIP=aarch64-elf-strip
     CONFIG_DEBUG_SECTION_MISMATCH=y
     CONFIG_SECTION_MISMATCH_WARN_ONLY=y
 )
