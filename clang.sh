@@ -18,19 +18,18 @@ GCC64_DIR=$(pwd)/GCC64
 GCC32_DIR=$(pwd)/GCC32
 
 msg "|| Cloning Toolchain ||"
-git clone --depth=1 https://github.com/cyberknight777/gcc-arm64 -b master $GCC64_DIR
-git clone --depth=1 https://github.com/cyberknight777/gcc-arm -b master $GCC32_DIR
+git clone --depth=1 https://gitlab.com/dakkshesh07/neutron-clang $CLANG_ROOTDIR
 
 # Main Declaration
-MODEL=Redmi Note 9
-DEVICE_CODENAME=merlin
+MODEL="Redmi Note 9"
+DEVICE_CODENAME=Merlin
 DEVICE_DEFCONFIG=merlin_defconfig
 AK3_BRANCH=merlin
 KERNEL_NAME=$(cat "arch/arm64/configs/$DEVICE_DEFCONFIG" | grep "CONFIG_LOCALVERSION=" | sed 's/CONFIG_LOCALVERSION="-*//g' | sed 's/"*//g' )
 export KBUILD_BUILD_USER=Himemori
 export KBUILD_BUILD_HOST=XZI-TEAM
-GCC_VER="$("$GCC64_DIR"/bin/aarch64-elf-gcc --version | head -n 1)"
-LLD_VER="$("$GCC64_DIR"/bin/aarch64-elf-ld.lld --version | head -n 1)"
+CLANG_VER="$("$CLANG_ROOTDIR"/bin/clang --version | head -n 1)"
+LLD_VER="$("$CLANG_ROOTDIR"/bin/ld.lld --version | head -n 1)"
 IMAGE=$(pwd)/out/arch/arm64/boot/Image.gz-dtb
 DATE=$(TZ=Asia/Jakarta date +"%Y%m%d-%T")
 DATE2=$(date +"%m%d")
@@ -38,8 +37,15 @@ START=$(date +"%s")
 DTB=$(pwd)/out/arch/arm64/boot/dts/mediatek/mt6768.dtb
 DTBO=$(pwd)/out/arch/arm64/boot/dtbo.img
 DISTRO=$(source /etc/os-release && echo "${NAME}")
-export KBUILD_COMPILER_STRING="$GCC_VER with $LLD_VER"
-PATH="$GCC64_DIR/bin/:$GCC32_DIR/bin/:/usr/bin:$PATH"
+export KBUILD_COMPILER_STRING="$CLANG_VER with $LLD_VER"
+export PATH="$CLANG_ROOTDIR/bin:$PATH"
+
+# Disable THINLTO
+sed -i "s/CONFIG_THINLTO=y/CONFIG_THINLTO=n/" arch/arm64/configs/$DEVICE_DEFCONFIG
+
+# Enable LTO CLANG
+sed -i "s/# CONFIG_LTO_CLANG is not set/CONFIG_LTO_CLANG=y/" arch/arm64/configs/$DEVICE_DEFCONFIG
+
 
 #Check Kernel Version
 KERVER=$(make kernelversion)
@@ -84,23 +90,39 @@ tg_post_msg() {
 }
 
 # Post Main Information
-tg_post_msg "<b>New Kernel Under Compilation</b>%0ADate : <code>$(TZ=Asia/Jakarta date)</code>%0A<code> --- Detail Info About it --- </code>%0A<b>- Docker OS: </b><code>$DISTRO</code>%0A- Kernel Name : <code>${KERNEL_NAME}</code>%0A- Kernel Version : <code>${KERVER}</code>%0A- Builder Name : <code>${KBUILD_BUILD_USER}</code>%0A- Builder Host : <code>${KBUILD_BUILD_HOST}</code>%0A- Host Core Count : <code>$PROCS</code>%0A- Compiler Used : <code>${KBUILD_COMPILER_STRING}</code>%0A- Branch : <code>$CI_BRANCH</code>%0A- Top Commit : <code>$COMMIT_HEAD</code>"
+tg_post_msg "
+<b>⛏ CI Build Triggered</b>
+<b>Date</b>: <code>$(TZ=Asia/Jakarta date)</code>
+<b>Docker OS</b>: <code>${DISTRO}</code>
+<b>Kernel Name</b>: <code>$KERNEL_NAME</code>
+<b>Kernel Version</b>: <code>${KERVER}</code>
+<b>Device Name</b>: <code>${MODEL} ($DEVICE_CODENAME)</code>
+<b>Device Defconfig</b>: <code>$DEVICE_DEFCONFIG</code>
+<b>Builder Name</b>: <code>${KBUILD_BUILD_USER}</code>
+<b>Builder Host</b>: <code>${KBUILD_BUILD_HOST}</code>
+<b>Pipeline Host</b>: <code>$DRONE_SYSTEM_HOSTNAME</code>
+<b>Host Core Count</b>: <code>${PROCS}</code>
+<b>Compiler Used</b>: <code>${KBUILD_COMPILER_STRING}</code>
+<b>Top Commit</b>: <code>${COMMIT_HEAD}</code>
+"
 
   MAKE+=(
-    CC=aarch64-elf-gcc
-    LD=aarch64-elf-ld.lld
-    CROSS_COMPILE=aarch64-elf-
-    CROSS_COMPILE_ARM32=arm-eabi-
-    AR=llvm-ar
+    CC=clang
     NM=llvm-nm
-    OBJDUMP=llvm-objdump
-    OBJCOPY=llvm-objcopy
-    OBJSIZE=llvm-objsize
+    CXX=clang++
+    AR=llvm-ar
+    LD=ld.lld
     STRIP=llvm-strip
+    OBJCOPY=llvm-objcopy
+    OBJDUMP=llvm-objdump
+    OBJSIZE=llvm-size
+    READELF=llvm-readelf
+    CROSS_COMPILE=aarch64-linux-gnu-
+    CROSS_COMPILE_ARM32=arm-linux-gnueabi-
     HOSTAR=llvm-ar
-    HOSTCC=gcc
-    HOSTCXX=aarch64-elf-g++
-    CONFIG_DEBUG_SECTION_MISMATCH=y
+    HOSTLD=ld.lld
+    HOSTCC=clang
+    HOSTCXX=clang++
 )
 
 # Compile
@@ -126,16 +148,27 @@ make -j$(nproc) ARCH=arm64 O=out \
 function push() {
     msg "|| Started Uploading ||"
     cd AnyKernel
-    ZIP_NAME=[$DATE2][$KERVER]$KERNEL_NAME[$DEVICE_CODENAME][R-OSS]-$HEADCOMMITID.zip
+    ZIP_NAME=[$CMP][$DATE2][$KERVER]$KERNEL_NAME[$DEVICE_CODENAME][R-OSS]-$HEADCOMMITID.zip
     ZIP=$(echo *.zip)
     MD5CHECK=$(md5sum "${ZIP}" | cut -d' ' -f1)
     SHA1CHECK=$(sha1sum "${ZIP}" | cut -d' ' -f1)
-    tg_post_msg "✅ <b>Build Success</b>%0A- <code>$((DIFF / 60)) minute(s) $((DIFF % 60)) second(s) </code>%0A<b>MD5 Checksum</b>%0A- <code>${MD5CHECK}</code>%0A<b>SHA1 Checksum</b>%0A- <code>${SHA1CHECK}</code>%0A<b>Under Commit Id Message</b>%0A- <code>${COMMIT_HEAD}</code>%0A<b>Compilers</b>%0A- <code>$KBUILD_COMPILER_STRING</code>%0A<b>Zip Name</b>%0A- <code>${ZIP_NAME}</code>%0A%0A-- Happy Using --"
+tg_post_msg "
+<b>✅ Build Success</b>
+- <code>$((DIFF / 60)) minute(s) $((DIFF % 60)) second(s) </code>
+<b>MD5 Checksum</b>
+- <code>$MD5CHECK</code>
+<b>SHA1 Checksum</b>
+- <code>$SHA1CHECK</code>
+<b>Compilers</b>
+- <code>$KBUILD_COMPILER_STRING</code>
+<b>Zip Name</b>
+- <code>$ZIP_NAME</code>
+"
     curl -F document=@$ZIP "https://api.telegram.org/bot$TG_TOKEN/sendDocument" \
         -F chat_id="$TG_CHAT_ID" \
         -F "disable_web_page_preview=true" \
-        -F "parse_mode=html" \
-        -F caption="✅ Compile took $((DIFF / 60)) minute(s) and $((DIFF % 60)) second(s)"
+        -F "parse_mode=Markdown" \
+        -F caption="$2"
 }
 # Fin Error
 function finerr() {
@@ -152,7 +185,7 @@ function finerr() {
 function zipping() {
     msg "|| Started Zipping ||"
     cd AnyKernel || exit 1
-    zip -r9 [$DATE2][$KERVER]$KERNEL_NAME[$DEVICE_CODENAME][R-OSS]-$HEADCOMMITID.zip *
+    zip -r9 [$CMP][$DATE2][$KERVER]$KERNEL_NAME[$DEVICE_CODENAME][R-OSS]-$HEADCOMMITID.zip *
     cd ..
 }
 compile
