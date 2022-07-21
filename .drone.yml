@@ -12,9 +12,10 @@ steps:
       - echo "en_US.UTF-8 UTF-8" | sudo tee -a /etc/locale.gen
       - echo "LANG=en_US.UTF-8" | sudo tee -a /etc/locale.conf
       - sudo locale-gen en_US.UTF-8
+      - wget http://archive.ubuntu.com/ubuntu/pool/main/n/ncurses/libtinfo6_6.2+20201114-2build1_amd64.deb -O libtinfo6.deb && dpkg-deb -R libtinfo6.deb libtinfo && cp libtinfo/lib/x86_64-linux-gnu/libtinfo.so.6.2 /usr/lib/libtinfo.so.6
       - git config --global user.name Egii
       - git config --global user.email regidesoftian@gmail.com
-      - git clone --depth=1 https://github.com/Himemoria/android_kernel_xiaomi_mt6768 -b base-r-release kernel
+      - git clone --depth=1 https://github.com/Himemoria/android_kernel_xiaomi_mt6768 -b wip kernel
       - "cp gcc.sh kernel && cd kernel"
       - "bash gcc.sh"
     environment:
@@ -25,37 +26,8 @@ steps:
       CMP: GCC
     image: panchajanya1999/archlinux:latest
     name: Roulette-Build
-    trigger:
-      branch:
-        - roulette
 
----
-clone:
-  depth: 1
-kind: pipeline
-name: Roulette-CLANG
-concurrency:
-  limit: 6
-steps:
-  -
-    commands:
-      - echo "LC_ALL=en_US.UTF-8" | sudo tee -a /etc/environment
-      - echo "en_US.UTF-8 UTF-8" | sudo tee -a /etc/locale.gen
-      - echo "LANG=en_US.UTF-8" | sudo tee -a /etc/locale.conf
-      - sudo locale-gen en_US.UTF-8
-      - git config --global user.name Egii
-      - git config --global user.email regidesoftian@gmail.com
-      - git clone --depth=1 https://github.com/Himemoria/android_kernel_xiaomi_mt6768 -b base-r-release kernel
-      - "cp clang.sh kernel && cd kernel"
-      - "bash clang.sh"
-    environment:
-      TG_TOKEN:
-        from_secret: TG_TOKEN
-      TG_CHAT_ID:
-        from_secret: TG_CHAT_ID
-      CMP: CLANG
-    image: panchajanya1999/archlinux:latest
-    name: Roulette-Build
-    trigger:
-      branch:
-        - roulette
+trigger:
+  event:
+  - custom
+
