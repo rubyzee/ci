@@ -9,10 +9,13 @@ steps:
   - 
     commands: 
       - "bash build.sh"
-    environment: 
+    environment:
+      GH_TOKEN:
+        from_secret: GH_TOKEN
       TG_TOKEN:
         from_secret: TG_TOKEN
-      TG_CHAT_ID: -1001724811252
+      TG_CHAT_ID:
+        from_secret: TG_CHAT_ID
     image: fajar4561/saciku:latest
     name: Build
     trigger: 
