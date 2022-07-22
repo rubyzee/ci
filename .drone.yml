@@ -1,23 +1,21 @@
---- 
-clone: 
-  depth: 1
+---
 kind: pipeline
-name: TWRP-Builder
-concurrency:
-  limit: 6
-steps: 
-  - 
-    commands: 
-      - "bash build.sh"
-    environment:
-      GH_TOKEN:
-        from_secret: GH_TOKEN
-      TG_TOKEN:
-        from_secret: TG_TOKEN
-      TG_CHAT_ID:
-        from_secret: TG_CHAT_ID
-    image: fajar4561/saciku:latest
-    name: Build
-    trigger: 
-      branch: 
-        - unified-tes
+type: docker
+name: linux-amd64
+
+platform:
+  arch: amd64
+  os: linux
+
+steps:
+- name: Start syncing && Compiling
+  image: brock5555/recovery
+  environment:
+       GH_TOKEN:
+         from_secret: GH_TOKEN
+       TG_CHAT_ID:
+         from_secret: TG_CHAT_ID
+       TG_TOKEN:
+         from_secret: TG_TOKEN
+  commands:
+  - bash build.sh
